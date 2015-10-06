@@ -1,0 +1,19 @@
+{
+  baseDir: "SampleData",
+  flywayDir: "flyway",
+  fixRunDir: "fixrun",
+  jdbc: {
+    test1: {
+      driverClassName: "org.h2.Driver",
+      url: "jdbc:h2:mem:test1;DB_CLOSE_DELAY=-1",
+      user: "sa",
+      password: ""
+    },
+    test2: {
+      driverClassName: "org.h2.Driver",
+      url: "jdbc:h2:mem:test2;DB_CLOSE_DELAY=-1",
+      user: "sa",
+      password: ""
+    }
+  }
+}
