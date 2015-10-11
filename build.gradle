@@ -15,8 +15,6 @@ buildscript {
         mavenLocal()
         mavenCentral()
         maven { url "http://repo.spring.io/release" }
-        maven { url "http://repo.spring.io/milestone" }
-        maven { url "http://repo.spring.io/snapshot" }
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
@@ -60,8 +58,7 @@ dependencies {
 
 buildscript {
     repositories {
-        maven.url "http://repo.spring.io/snapshot"
-        maven.url "http://repo.spring.io/milestone"
+        maven { url "http://repo.spring.io/release" }
     }
     // ...
 }

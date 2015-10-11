@@ -13,5 +13,5 @@ public class DiffModel {
     public List<TableModel> createTableModels;
     public List<TableModel> dropTableModels;
     public List<TableMappingModel> tableMappingModels;
-    public List<TableFieldMappingModel> tableFieldMappingModels;
+    public List<TableColumnMappingModel> tableColumnMappingModels;
 }

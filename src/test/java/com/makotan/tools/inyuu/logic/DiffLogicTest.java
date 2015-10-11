@@ -6,6 +6,7 @@ import com.makotan.tools.inyuu.model.MetadataModel;
 import com.makotan.tools.inyuu.model.RenameModel;
 import com.makotan.tools.inyuu.model.TableModel;
 import com.makotan.tools.inyuu.model.diff.DiffModel;
+import com.makotan.tools.inyuu.model.diff.TableColumnMappingModel;
 import com.makotan.tools.inyuu.model.diff.TableMappingModel;
 import com.makotan.tools.inyuu.model.input.InputData;
 import com.makotan.tools.inyuu.model.input.InyuuConfig;
@@ -23,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,14 +103,14 @@ public class DiffLogicTest {
             test2Either.processRight(test2Model -> {
                 inputData.currentModel = test1Model;
                 inputData.nextModel = test2Model;
-                List<Tuple2<TableMappingModel,String>> tupleList = test1Model.tableModels.stream().map(tm -> {
+                List<TableMappingModel> tupleList = test1Model.tableModels.stream().map(tm -> {
                     return diffLogic.currentTableAction(tm , test2Model.tableModels , inputData);
                 }).collect(Collectors.toList());
                 tupleList.forEach( t2 -> {
-                    System.out.println(t2._1.currentTableModel.tableName);
-                    System.out.println(" isDrop     " + t2._1.isDrop());
-                    System.out.println(" isNoAction " + t2._1.isNoAction());
-                    System.out.println(" isRename   " + t2._1.isRename());
+                    System.out.println(t2.currentTableModel.tableName);
+                    System.out.println(" isDrop     " + t2.isDrop());
+                    System.out.println(" isNoAction " + t2.isNoAction());
+                    System.out.println(" isRename   " + t2.isRename());
                 });
             });
         });
@@ -161,6 +163,37 @@ public class DiffLogicTest {
             assertThat(1,is(r._2.createTableModels.size()));
             assertThat(1,is(r._2.dropTableModels.size()));
             assertThat(3,is(r._2.tableMappingModels.size()));
+        });
+    }
+
+    @Test
+    public void addColumntest() {
+        DiffLogic diffLogic = new DiffLogic();
+        InputData inputData = new InputData();
+
+        RenameModel renameModel = new RenameModel();
+        renameModel.currentName = "TEST_FROM";
+        renameModel.nextName = "TEST_TO";
+        inputData.renameModelList.add(renameModel);
+        inputData.renameColumnModels = Collections.emptyList();
+
+        test1Either.processRight(test1Model -> {
+            test2Either.processRight(test2Model -> {
+                inputData.currentModel = test1Model;
+                inputData.nextModel = test2Model;
+            });
+        });
+
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diff(inputData);
+        diff.processRight(r -> {
+            r._2.tableMappingModels.stream()
+                    .filter(tm -> tm.nextTableModel.tableName.equals("TEST_TO"))
+                    .map(tm -> {
+                        List<TableColumnMappingModel> addColumnModel = diffLogic.createAddColumnModel(tm, r._1);
+                        assertNotNull(addColumnModel);
+                        assertThat(addColumnModel.size() , is(1));
+                        return "";
+                    }).collect(Collectors.toList());
         });
 
     }

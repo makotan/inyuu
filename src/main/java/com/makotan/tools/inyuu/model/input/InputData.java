@@ -15,5 +15,5 @@ public class InputData {
     public MetadataModel currentModel;
     public MetadataModel nextModel;
     public List<RenameModel> renameModelList = new ArrayList<>();
-    public List<RenameFieldModel> renameFieldModels = new ArrayList<>();
+    public List<RenameColumnModel> renameColumnModels = new ArrayList<>();
 }

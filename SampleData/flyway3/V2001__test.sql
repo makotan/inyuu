@@ -6,5 +6,6 @@ CREATE TABLE TEST03 (
 
 CREATE TABLE TEST_TO (
   field01 INTEGER,
-  field02 VARCHAR(10)
+  field02 VARCHAR(10),
+  newField INTEGER
 );

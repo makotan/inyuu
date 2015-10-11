@@ -1,10 +1,12 @@
 package com.makotan.tools.inyuu.logic;
 
 import com.makotan.tools.inyuu.exception.InyuuException;
-import com.makotan.tools.inyuu.model.RenameFieldModel;
+import com.makotan.tools.inyuu.model.ColumnModel;
+import com.makotan.tools.inyuu.model.RenameColumnModel;
 import com.makotan.tools.inyuu.model.RenameModel;
 import com.makotan.tools.inyuu.model.TableModel;
 import com.makotan.tools.inyuu.model.diff.DiffModel;
+import com.makotan.tools.inyuu.model.diff.TableColumnMappingModel;
 import com.makotan.tools.inyuu.model.diff.TableMappingModel;
 import com.makotan.tools.inyuu.model.input.InputData;
 import com.makotan.tools.inyuu.util.Either;
@@ -27,44 +29,31 @@ public class DiffLogic {
         }).flatMap(t -> {
             List<TableModel> nextTableModels = t._1.nextModel.tableModels;
             List<TableModel> currentTableModels = t._1.currentModel.tableModels;
-            List<Tuple2<TableMappingModel, String>> currentActionList =
+            List<TableMappingModel> currentActionList =
                     currentTableModels.stream().map(current ->
                             currentTableAction(current, nextTableModels, t._1))
                             .collect(Collectors.toList());
 
-            List<String> useNextTableName =
-                    currentActionList.stream().
-                            map(ca -> ca._2).
-                            filter(s -> s != null)
-                            .collect(Collectors.toList());
-
-            List<RenameModel> renameModelList = t._1.renameModelList;
-            List<String> renameCurrentNameList = renameModelList.stream()
-                    .map(renameModel -> {
-                        return renameModel.currentName;
-                    }).collect(Collectors.toList());
-
             t._2.createTableModels = createTableList(inputData);
 
             t._2.dropTableModels = currentActionList.stream()
-                    .filter(cat -> cat._1.isDrop())
-                    .map(cat -> cat._1.currentTableModel)
+                    .filter(cat -> cat.isDrop())
+                    .map(cat -> cat.currentTableModel)
                     .collect(Collectors.toList());
 
             t._2.tableMappingModels = currentActionList.stream()
-                    .filter(cat -> !cat._1.isDrop())
-                    .map(cat -> cat._1)
+                    .filter(cat -> !cat.isDrop())
                     .collect(Collectors.toList());
             //FIME
             return Either.right(t);
         });
     }
 
-    Tuple2<TableMappingModel,String> currentTableAction(TableModel currentTableModel, List<TableModel> nextTableModels,InputData inputData) {
+    TableMappingModel currentTableAction(TableModel currentTableModel, List<TableModel> nextTableModels,InputData inputData) {
         String currentTableName = currentTableModel.tableName;
         for (TableModel nextTM : nextTableModels) {
             if (currentTableName.equalsIgnoreCase(nextTM.tableName)) {
-                return Tuple2.tuple(new TableMappingModel(currentTableModel,nextTM),nextTM.tableName);
+                return new TableMappingModel(currentTableModel,nextTM);
             }
         }
         List<RenameModel> renameModels = inputData.renameModelList;
@@ -72,12 +61,12 @@ public class DiffLogic {
             if (currentTableName.equalsIgnoreCase(rename.currentName)) {
                 for (TableModel nextTM : nextTableModels) {
                     if (rename.nextName.equalsIgnoreCase(nextTM.tableName)) {
-                        return Tuple2.tuple(new TableMappingModel(currentTableModel,nextTM,rename),nextTM.tableName);
+                        return new TableMappingModel(currentTableModel,nextTM,rename);
                     }
                 }
             }
         }
-        return Tuple2.tuple(new TableMappingModel(currentTableModel,null),null);
+        return new TableMappingModel(currentTableModel,null);
     }
 
     List<TableModel> createTableList(InputData inputData) {
@@ -113,5 +102,23 @@ public class DiffLogic {
         });
         return createTableList;
     }
+
+    List<TableColumnMappingModel> createAddColumnModel(TableMappingModel tmm,InputData inputData) {
+        List<String> currentColumns = tmm.currentTableModel.fieldModes.stream()
+                .map(cm -> cm.columnName).collect(Collectors.toList());
+        List<String> renameColumnNames = inputData.renameColumnModels.stream()
+                .filter(rcm -> rcm.tableName.equals(tmm.nextTableModel.tableName))
+                .map(rcm -> rcm.nextColumnName)
+                .collect(Collectors.toList());
+
+        List<ColumnModel> nextColumns = tmm.nextTableModel.fieldModes;
+
+        return nextColumns.stream()
+                .filter(cm -> ! currentColumns.contains(cm.columnName))
+                .filter(cm -> ! renameColumnNames.contains(cm.columnName))
+                .map(cm -> new TableColumnMappingModel(tmm,null,cm))
+                .collect(Collectors.toList());
+    }
+
 
 }
