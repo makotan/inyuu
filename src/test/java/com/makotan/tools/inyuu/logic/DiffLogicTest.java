@@ -158,7 +158,7 @@ public class DiffLogicTest {
             });
         });
 
-        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diff(inputData);
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diffTableModel(inputData);
         diff.processRight(r -> {
             assertThat(1,is(r._2.createTableModels.size()));
             assertThat(1,is(r._2.dropTableModels.size()));
@@ -184,7 +184,7 @@ public class DiffLogicTest {
             });
         });
 
-        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diff(inputData);
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diffTableModel(inputData);
         diff.processRight(r -> {
             r._2.tableMappingModels.stream()
                     .filter(tm -> tm.nextTableModel.tableName.equals("TEST_TO"))
@@ -192,6 +192,7 @@ public class DiffLogicTest {
                         List<TableColumnMappingModel> addColumnModel = diffLogic.createAddColumnModel(tm, r._1);
                         assertNotNull(addColumnModel);
                         assertThat(addColumnModel.size() , is(1));
+                        assertEquals(addColumnModel.get(0).nextCoulmn.columnName,"NEWFIELD");
                         return "";
                     }).collect(Collectors.toList());
         });

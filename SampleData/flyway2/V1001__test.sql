@@ -6,5 +6,6 @@ CREATE TABLE TEST02 (
 
 CREATE TABLE TEST_FROM (
   field01 INTEGER,
-  field02 VARCHAR(10)
+  field02 VARCHAR(10),
+  delcolmn VARCHAR(5)
 );

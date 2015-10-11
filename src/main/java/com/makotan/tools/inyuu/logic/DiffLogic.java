@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 public class DiffLogic {
 
     public Either<InyuuException,Tuple2<InputData,DiffModel>> diff(InputData inputData) {
+        return diffTableModel(inputData);
+    }
+
+    Either<InyuuException,Tuple2<InputData,DiffModel>> diffTableModel(InputData inputData) {
         Tuple2<InputData,DiffModel> tuple = Tuple2.tuple(inputData, new DiffModel());
         return Either.right(tuple).flatMap(t -> {
             t._2.options = t._1.options;
