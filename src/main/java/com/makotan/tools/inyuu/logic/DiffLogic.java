@@ -110,18 +110,89 @@ public class DiffLogic {
     List<TableColumnMappingModel> createAddColumnModel(TableMappingModel tmm,InputData inputData) {
         List<String> currentColumns = tmm.currentTableModel.fieldModes.stream()
                 .map(cm -> cm.columnName).collect(Collectors.toList());
+        List<String> nextColumnNames = tmm.nextTableModel.fieldModes.stream()
+                .map(cm -> cm.columnName).collect(Collectors.toList());
         List<String> renameColumnNames = inputData.renameColumnModels.stream()
                 .filter(rcm -> rcm.tableName.equals(tmm.nextTableModel.tableName))
+                .filter(rcm -> nextColumnNames.contains(rcm.nextColumnName))
+                .filter(rcm -> currentColumns.contains(rcm.currentColumnName))
                 .map(rcm -> rcm.nextColumnName)
                 .collect(Collectors.toList());
 
-        List<ColumnModel> nextColumns = tmm.nextTableModel.fieldModes;
-
-        return nextColumns.stream()
+        return tmm.nextTableModel.fieldModes.stream()
                 .filter(cm -> ! currentColumns.contains(cm.columnName))
                 .filter(cm -> ! renameColumnNames.contains(cm.columnName))
                 .map(cm -> new TableColumnMappingModel(tmm,null,cm))
                 .collect(Collectors.toList());
+    }
+
+    List<TableColumnMappingModel> createDropColumnModel(TableMappingModel tmm,InputData inputData) {
+        List<String> currentColumns = tmm.currentTableModel.fieldModes.stream()
+                .map(cm -> cm.columnName).collect(Collectors.toList());
+        List<String> nextColumnNames = tmm.nextTableModel.fieldModes.stream()
+                .map(cm -> cm.columnName).collect(Collectors.toList());
+        List<String> renameColumnNames = inputData.renameColumnModels.stream()
+                .filter(rcm -> rcm.tableName.equals(tmm.nextTableModel.tableName))
+                .filter(rcm -> nextColumnNames.contains(rcm.nextColumnName))
+                .filter(rcm -> currentColumns.contains(rcm.currentColumnName))
+                .map(rcm -> rcm.currentColumnName)
+                .collect(Collectors.toList());
+
+        return tmm.currentTableModel.fieldModes.stream()
+                .filter(nm -> ! nextColumnNames.contains(nm.columnName))
+                .filter(nm -> ! renameColumnNames.contains(nm.columnName))
+                .map(nm -> new TableColumnMappingModel(tmm,nm,null))
+                .collect(Collectors.toList());
+
+    }
+
+    List<TableColumnMappingModel> createModiyColumnModel(TableMappingModel tmm,InputData inputData, List<TableColumnMappingModel> addColumn,List<TableColumnMappingModel> dropColumn) {
+        List<String> addColumnName = addColumn.stream()
+                .map(c -> c.nextCoulmn.columnName).collect(Collectors.toList());
+        List<String> dropColumnName = dropColumn.stream()
+                .map(c -> c.currentColumn.columnName).collect(Collectors.toList());
+
+        List<ColumnModel> currentColumns = tmm.currentTableModel.fieldModes.stream()
+                .filter(cn -> !dropColumnName.contains(cn.columnName))
+                .collect(Collectors.toList());
+        List<String> currentColumnNames = currentColumns.stream()
+                .map(c -> c.columnName)
+                .collect(Collectors.toList());
+        List<ColumnModel> nextColumns = tmm.nextTableModel.fieldModes.stream()
+                .filter(cn -> ! addColumnName.contains(cn.columnName))
+                .collect(Collectors.toList());
+        List<String> nextColumnNames = nextColumns.stream()
+                .map(c -> c.columnName)
+                .collect(Collectors.toList());
+        List<RenameColumnModel> renameColumns = inputData.renameColumnModels.stream()
+                .filter(rcm -> rcm.tableName.equals(tmm.nextTableModel.tableName))
+                .filter(rcm -> nextColumnNames.contains(rcm.nextColumnName))
+                .filter(rcm -> currentColumnNames.contains(rcm.currentColumnName))
+                .collect(Collectors.toList());
+
+        List<TableColumnMappingModel> modify = new ArrayList<>();
+
+        nextColumns.stream().forEach(ncm -> {
+            if (currentColumnNames.contains(ncm.columnName)) {
+                ColumnModel ccm = currentColumns.stream()
+                        .filter(cc -> cc.columnName.equals(ncm.columnName)).findFirst().get();
+                if (! ncm.equals(ccm)) {
+                    modify.add(new TableColumnMappingModel(tmm,ccm,ncm));
+                }
+            } else {
+                renameColumns.stream()
+                        .filter(nc -> nc.nextColumnName.equals(ncm.columnName))
+                        .findFirst().ifPresent(rcm -> {
+                    ColumnModel ccm = currentColumns.stream()
+                            .filter(cc -> cc.columnName.equals(rcm.currentColumnName)).findFirst().get();
+                    if (ccm != null) {
+                        modify.add(new TableColumnMappingModel(tmm, ccm, ncm));
+                    }
+                });
+            }
+        });
+
+        return modify;
     }
 
 

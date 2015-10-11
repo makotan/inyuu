@@ -3,6 +3,7 @@ package com.makotan.tools.inyuu.logic;
 import com.makotan.tools.inyuu.cli.CliOptions;
 import com.makotan.tools.inyuu.exception.InyuuException;
 import com.makotan.tools.inyuu.model.MetadataModel;
+import com.makotan.tools.inyuu.model.RenameColumnModel;
 import com.makotan.tools.inyuu.model.RenameModel;
 import com.makotan.tools.inyuu.model.TableModel;
 import com.makotan.tools.inyuu.model.diff.DiffModel;
@@ -175,7 +176,12 @@ public class DiffLogicTest {
         renameModel.currentName = "TEST_FROM";
         renameModel.nextName = "TEST_TO";
         inputData.renameModelList.add(renameModel);
-        inputData.renameColumnModels = Collections.emptyList();
+        inputData.renameColumnModels = new ArrayList<>();
+        RenameColumnModel rcm = new RenameColumnModel();
+        rcm.tableName = "TEST_TO";
+        rcm.currentColumnName = "FROMFIELD";
+        rcm.nextColumnName = "TOFIELD";
+        inputData.renameColumnModels.add(rcm);
 
         test1Either.processRight(test1Model -> {
             test2Either.processRight(test2Model -> {
@@ -193,6 +199,84 @@ public class DiffLogicTest {
                         assertNotNull(addColumnModel);
                         assertThat(addColumnModel.size() , is(1));
                         assertEquals(addColumnModel.get(0).nextCoulmn.columnName,"NEWFIELD");
+                        return "";
+                    }).collect(Collectors.toList());
+        });
+
+    }
+
+    @Test
+    public void dropColumntest() {
+        DiffLogic diffLogic = new DiffLogic();
+        InputData inputData = new InputData();
+
+        RenameModel renameModel = new RenameModel();
+        renameModel.currentName = "TEST_FROM";
+        renameModel.nextName = "TEST_TO";
+        inputData.renameModelList.add(renameModel);
+        inputData.renameColumnModels = new ArrayList<>();
+        RenameColumnModel rcm = new RenameColumnModel();
+        rcm.tableName = "TEST_TO";
+        rcm.currentColumnName = "FROMFIELD";
+        rcm.nextColumnName = "TOFIELD";
+        inputData.renameColumnModels.add(rcm);
+
+        test1Either.processRight(test1Model -> {
+            test2Either.processRight(test2Model -> {
+                inputData.currentModel = test1Model;
+                inputData.nextModel = test2Model;
+            });
+        });
+
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diffTableModel(inputData);
+        diff.processRight(r -> {
+            r._2.tableMappingModels.stream()
+                    .filter(tm -> tm.nextTableModel.tableName.equals("TEST_TO"))
+                    .map(tm -> {
+                        List<TableColumnMappingModel> addColumnModel = diffLogic.createDropColumnModel(tm, r._1);
+                        assertNotNull(addColumnModel);
+                        assertThat(addColumnModel.size() , is(1));
+                        assertEquals(addColumnModel.get(0).currentColumn.columnName,"DELCOLMN");
+                        return "";
+                    }).collect(Collectors.toList());
+        });
+
+    }
+
+    @Test
+    public void modifyColumntest() {
+        DiffLogic diffLogic = new DiffLogic();
+        InputData inputData = new InputData();
+
+        RenameModel renameModel = new RenameModel();
+        renameModel.currentName = "TEST_FROM";
+        renameModel.nextName = "TEST_TO";
+        inputData.renameModelList.add(renameModel);
+        inputData.renameColumnModels = new ArrayList<>();
+        RenameColumnModel rcm = new RenameColumnModel();
+        rcm.tableName = "TEST_TO";
+        rcm.currentColumnName = "FROMFIELD";
+        rcm.nextColumnName = "TOFIELD";
+        inputData.renameColumnModels.add(rcm);
+
+        test1Either.processRight(test1Model -> {
+            test2Either.processRight(test2Model -> {
+                inputData.currentModel = test1Model;
+                inputData.nextModel = test2Model;
+            });
+        });
+
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diffTableModel(inputData);
+        diff.processRight(r -> {
+            r._2.tableMappingModels.stream()
+                    .filter(tm -> tm.nextTableModel.tableName.equals("TEST_TO"))
+                    .map(tm -> {
+                        List<TableColumnMappingModel> acm = diffLogic.createAddColumnModel(tm, r._1);
+                        List<TableColumnMappingModel> dcm = diffLogic.createDropColumnModel(tm, r._1);
+                        List<TableColumnMappingModel> modifyList = diffLogic.createModiyColumnModel(tm, r._1,acm,dcm);
+                        assertNotNull(modifyList);
+                        assertThat(modifyList.size() , is(1));
+                        assertEquals(modifyList.get(0).currentColumn.columnName,"FROMFIELD");
                         return "";
                     }).collect(Collectors.toList());
         });
