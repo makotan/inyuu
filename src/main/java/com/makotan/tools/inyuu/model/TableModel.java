@@ -41,6 +41,19 @@ public class TableModel {
 
     }
 
+    public boolean equalsSelfFields(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TableModel that = (TableModel) o;
+
+        if (tableSchema != null ? !tableSchema.equals(that.tableSchema) : that.tableSchema != null) return false;
+        if (tableName != null ? !tableName.equals(that.tableName) : that.tableName != null) return false;
+        if (comment != null ? !comment.equals(that.comment) : that.comment != null) return false;
+        return !(extendProperties != null ? !extendProperties.equals(that.extendProperties) : that.extendProperties != null);
+
+    }
+
     @Override
     public int hashCode() {
         int result = tableSchema != null ? tableSchema.hashCode() : 0;

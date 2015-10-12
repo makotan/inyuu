@@ -22,7 +22,21 @@ import java.util.stream.Collectors;
 public class DiffLogic {
 
     public Either<InyuuException,Tuple2<InputData,DiffModel>> diff(InputData inputData) {
-        return diffTableModel(inputData);
+        return diffTableModel(inputData).flatMap(t -> {
+            t._2.tableMappingModels.stream()
+                    .forEach(tmm -> {
+                        List<TableColumnMappingModel> addColumn = createAddColumnModel(tmm, inputData);
+                        List<TableColumnMappingModel> dropColumn = createDropColumnModel(tmm, inputData);
+                        List<TableColumnMappingModel> modifyColumn = createModiyColumnModel(tmm, inputData,addColumn,dropColumn);
+                        t._2.addColumnModels.addAll(addColumn);
+                        t._2.dropColumnModels.addAll(dropColumn);
+                        t._2.modifyColumnModels.addAll(modifyColumn);
+                    });
+            t._2.modifyTableModels = t._2.tableMappingModels.stream()
+                    .filter(tmm -> ! tmm.nextTableModel.equalsSelfFields(tmm.currentTableModel))
+                    .collect(Collectors.toList());
+            return Either.right(t);
+        });
     }
 
     Either<InyuuException,Tuple2<InputData,DiffModel>> diffTableModel(InputData inputData) {
@@ -48,7 +62,6 @@ public class DiffLogic {
             t._2.tableMappingModels = currentActionList.stream()
                     .filter(cat -> !cat.isDrop())
                     .collect(Collectors.toList());
-            //FIME
             return Either.right(t);
         });
     }

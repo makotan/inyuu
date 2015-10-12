@@ -283,4 +283,33 @@ public class DiffLogicTest {
 
     }
 
+    @Test
+    public void modifyTableTest() {
+        DiffLogic diffLogic = new DiffLogic();
+        InputData inputData = new InputData();
+
+        RenameModel renameModel = new RenameModel();
+        renameModel.currentName = "TEST_FROM";
+        renameModel.nextName = "TEST_TO";
+        inputData.renameModelList.add(renameModel);
+        inputData.renameColumnModels = new ArrayList<>();
+        RenameColumnModel rcm = new RenameColumnModel();
+        rcm.tableName = "TEST_TO";
+        rcm.currentColumnName = "FROMFIELD";
+        rcm.nextColumnName = "TOFIELD";
+        inputData.renameColumnModels.add(rcm);
+
+        test1Either.processRight(test1Model -> {
+            test2Either.processRight(test2Model -> {
+                inputData.currentModel = test1Model;
+                inputData.nextModel = test2Model;
+            });
+        });
+        Either<InyuuException, Tuple2<InputData, DiffModel>> diff = diffLogic.diff(inputData);
+        assertTrue(diff.isRight());
+        diff.processRight(t2 -> {
+            assertThat(t2._2.modifyTableModels.size(), is(1));
+        });
+    }
+
 }

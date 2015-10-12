@@ -3,6 +3,7 @@ package com.makotan.tools.inyuu.model.diff;
 import com.makotan.tools.inyuu.cli.CliOptions;
 import com.makotan.tools.inyuu.model.TableModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -13,5 +14,9 @@ public class DiffModel {
     public List<TableModel> createTableModels;
     public List<TableModel> dropTableModels;
     public List<TableMappingModel> tableMappingModels;
-    public List<TableColumnMappingModel> tableColumnMappingModels;
+    public List<TableMappingModel> modifyTableModels;
+    public List<TableColumnMappingModel> addColumnModels = new ArrayList<>();
+    public List<TableColumnMappingModel> dropColumnModels = new ArrayList<>();
+    public List<TableColumnMappingModel> modifyColumnModels = new ArrayList<>();
+
 }
