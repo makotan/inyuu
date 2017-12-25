@@ -15,3 +15,6 @@ build/
 .idea/
 .gradle/
 *.iml
+
+logs/
+out/
